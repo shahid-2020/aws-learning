@@ -1,0 +1,15 @@
+# package directories
+/**/node_modules
+/**/jspm_packages
+
+# Serverless directories
+/**/.serverless
+
+# OS
+/**/.DS_Store
+
+# ENV Vars
+/**/.env*
+
+# DO NOT IGNORE
+/**/!.env.example
