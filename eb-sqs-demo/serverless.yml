@@ -1,0 +1,37 @@
+service: eb-sqs-demo
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: ${opt:stage, 'dev'}
+  region: us-east-1
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action: events:PutEvents
+          Resource: !GetAtt EventBus.Arn
+
+functions:
+  processEventsLambda:
+    handler: functions/processEvent.handler
+    events:
+      - sqs:
+          arn: !GetAtt TargetSQS.Arn
+          batchSize: 10
+          functionResponseType: "ReportBatchItemFailures"
+  putEventsLambda:
+    handler: functions/putEvents.handler
+    environment:
+      EventBusName: !Ref EventBus
+    events:
+      - http:
+          path: /generate
+          method: post
+
+resources:
+  Resources: ${file(resources.yml)}
+  Outputs:
+    EventBusName:
+      Value: !Ref EventBus

@@ -1,0 +1,41 @@
+EventBus:
+  Type: AWS::Events::EventBus
+  Properties: 
+    Name: QR_EVENT_BUS
+
+TargetSQS:
+  Type: AWS::SQS::Queue
+  Properties:
+    QueueName: QR_MESSAGE_QUEUE
+
+TargetDLQ:
+  Type: AWS::SQS::Queue
+  Properties:
+    QueueName: QR_MESSAGE_DLQ
+    RedrivePolicy:
+      deadLetterTargetArn: !GetAtt TargetSQS.Arn
+      maxReceiveCount: 1
+
+TargetSQSRule:
+  Type: AWS::Events::Rule
+  Properties:
+    EventBusName: !GetAtt EventBus.Arn
+    EventPattern:
+      Source:
+        - "fuel app"
+    Targets:
+      - Arn: !GetAtt TargetSQS.Arn
+        Id: qr-event-bus-target-${sls:stage}
+
+TargetSQSPolicy:
+  Type: AWS::SQS::QueuePolicy
+  Properties:
+    Queues:
+      - !Ref TargetSQS
+    PolicyDocument: 
+      Statement: 
+        - Effect: "Allow"
+          Action: 
+            - "SQS:SendMessage" 
+          Resource: !GetAtt TargetSQS.Arn
+          Principal: '*'
